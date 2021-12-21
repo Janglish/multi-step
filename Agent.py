@@ -58,16 +58,20 @@ class Agent(nn.Module):
         x = self.relu4(self.linear1(x))
         return self.linear2(x.view(x.size(0), -1))
          
-    def policy(self, state):
-        sample = random.random()
-        eps_threshold = max(self.initial_eps - 0.9 * self.steps_done / 1000000, self.final_eps)
-        self.steps_done += 1
-        if sample > eps_threshold:
-            with torch.no_grad():
-                return self(state).max(1)[1].view(1, 1)
-            
+    def policy(self, state, train_flag):
+        if train_flag:
+            sample = random.random()
+            eps_threshold = max(self.initial_eps - 0.9 * self.steps_done / 1000000, self.final_eps)
+            self.steps_done += 1
+            if sample > eps_threshold:
+                with torch.no_grad():
+                    return self(state).max(1)[1].view(1, 1)
+            else:
+                return torch.tensor([[random.randrange(self.n_actions)]], device=self.device, dtype=torch.long)
         else:
-            return torch.tensor([[random.randrange(self.n_actions)]], device=self.device, dtype=torch.long)
+            with torch.no_grad():
+                    return self(state).max(1)[1].view(1, 1)
+            
         
     def update_network(self, target_net, optimizer):
         if len(self.replay_buffer.buffer) < self.batch_size:
@@ -99,6 +103,7 @@ class Agent(nn.Module):
         optimizer.zero_grad()
         loss = F.smooth_l1_loss(state_action_values, expected_state_action_values.unsqueeze(1))
         loss.backward()
+        print(loss)
         #for param in self.parameters():
         #    param.grad.data.clamp_(-1, 1)
         optimizer.step()
