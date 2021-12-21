@@ -103,7 +103,6 @@ class Agent(nn.Module):
         optimizer.zero_grad()
         loss = F.smooth_l1_loss(state_action_values, expected_state_action_values.unsqueeze(1))
         loss.backward()
-        print(loss)
         #for param in self.parameters():
         #    param.grad.data.clamp_(-1, 1)
         optimizer.step()
