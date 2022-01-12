@@ -34,6 +34,7 @@ class ReplayBuffer:
                 for i, exp in enumerate(self.n_step_buffer):
                     R += (self.gamma ** i) * exp.reward
                 R = torch.tensor([R], device=self.device)
+                R.clamp_(-1, 1)
                 expo = torch.tensor([len(self.n_step_buffer)], device=self.device)
                 experience = self.Transition(self.n_step_buffer[0].state, self.n_step_buffer[0].action, None, R, expo)
                 experience = zlib.compress(pickle.dumps(experience))
@@ -47,6 +48,7 @@ class ReplayBuffer:
             for i, exp in enumerate(self.n_step_buffer):
                 R += (self.gamma ** i) * exp.reward
             R = torch.tensor([R], device=self.device)
+            R.clamp_(-1, 1)
             expo = torch.tensor([len(self.n_step_buffer)], device=self.device)
             experience = self.Transition(self.n_step_buffer[0].state, self.n_step_buffer[0].action, 
                                          self.n_step_buffer[-1].next_state, R, expo)
